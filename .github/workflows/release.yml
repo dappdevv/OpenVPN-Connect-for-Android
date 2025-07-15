@@ -69,7 +69,7 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
       - name: Build signed APK
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --stacktrace --info
         env:
           JAVA_HOME: ${{ env.JAVA_HOME }}
           keystoreFile: keystore.jks
@@ -79,7 +79,7 @@ jobs:
 
       - name: Build unsigned APK (fallback)
         if: ${{ env.KEYSTORE_BASE64 == '' }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --stacktrace --info
         env:
           JAVA_HOME: ${{ env.JAVA_HOME }}
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}

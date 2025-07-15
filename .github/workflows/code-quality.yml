@@ -55,9 +55,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run Android Lint
-        run: ./gradlew lintDebug
-        continue-on-error: true
+      - name: Run lint
+        # Add --stacktrace and --info for better debugging
+        run: ./gradlew lint --stacktrace --info
+        working-directory: ${{ env.PROJECT_ROOT }}
 
       - name: Run Checkstyle
         run: ./gradlew checkstyle
