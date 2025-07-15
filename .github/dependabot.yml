@@ -1,0 +1,35 @@
+version: 2
+updates:
+  # Автоматическое обновление GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    reviewers:
+      - "dappdevv"
+    open-pull-requests-limit: 5
+
+  # Автоматическое обновление Gradle зависимостей
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - "dependencies"
+      - "gradle"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    reviewers:
+      - "dappdevv"
+    open-pull-requests-limit: 5
+    ignore:
+      # Игнорируем основные Android зависимости, которые привязаны к версии SDK
+      - dependency-name: "com.android.tools.build:gradle"
+      - dependency-name: "com.android.support:*"
