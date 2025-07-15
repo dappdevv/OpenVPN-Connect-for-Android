@@ -22,3 +22,23 @@ main/openvpn3
 
 main/src/ovpn3/java/net/openvpn/ovpn3
 main/.externalNativeBuild
+
+# Keystore files and secrets (for Android signing)
+*.keystore
+*.jks
+*.p12
+keystore_*.txt
+github-secrets.txt
+signing.properties
+
+# Build reports
+build-report.md
+*.apk
+*.aab
+
+# IDE and OS files
+.vscode/
+*.swp
+*.swo
+*~
+Thumbs.db

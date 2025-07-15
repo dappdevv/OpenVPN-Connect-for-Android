@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  android-build:
+    image: openjdk:8-jdk
+    working_dir: /workspace
+    volumes:
+      - .:/workspace
+      - gradle-cache:/root/.gradle
+    environment:
+      - ANDROID_HOME=/opt/android-sdk
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - PATH=/opt/android-sdk/tools:/opt/android-sdk/tools/bin:/opt/android-sdk/platform-tools:$PATH
+    command: |
+      bash -c "
+        # Установка зависимостей
+        apt-get update && apt-get install -y \
+          wget \
+          unzip \
+          git \
+          build-essential \
+          cmake \
+          swig \
+          python3 \
+          python3-pip &&
+        
+        # Установка Android SDK
+        mkdir -p /opt/android-sdk &&
+        cd /opt/android-sdk &&
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-6858069_latest.zip &&
+        unzip -q commandlinetools-linux-6858069_latest.zip &&
+        mkdir -p cmdline-tools/latest &&
+        mv cmdline-tools/* cmdline-tools/latest/ 2>/dev/null || true &&
+        
+        # Принятие лицензий и установка компонентов
+        yes | cmdline-tools/latest/bin/sdkmanager --licenses &&
+        cmdline-tools/latest/bin/sdkmanager 'platform-tools' 'platforms;android-27' 'build-tools;27.0.3' 'ndk;21.4.7075529' 'cmake;3.10.2.4988404' &&
+        
+        # Переход в рабочую директорию
+        cd /workspace &&
+        
+        # Инициализация субмодулей
+        git config --global --add safe.directory /workspace &&
+        git submodule update --init --recursive &&
+        
+        # Сборка
+        chmod +x gradlew &&
+        ./gradlew assembleDebug &&
+        
+        echo 'Сборка завершена! APK файлы:' &&
+        find main/build/outputs/apk -name '*.apk' -type f
+      "
+
+volumes:
+  gradle-cache:

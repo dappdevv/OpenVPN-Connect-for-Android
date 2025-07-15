@@ -1,0 +1,96 @@
+name: Release Build
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Version name"
+        required: true
+        default: "1.0.0"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: "8"
+          distribution: "temurin"
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install SWIG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y swig
+          swig -version
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 27
+          build-tools: 27.0.3
+          ndk-version: "21.4.7075529"
+
+      - name: Install CMake
+        run: |
+          sudo apt-get install -y cmake
+          cmake --version
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Decode Keystore
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        run: |
+          echo ${{ secrets.KEYSTORE_BASE64 }} | base64 -d > keystore.jks
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Build signed APK
+        run: ./gradlew assembleRelease
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+          keystoreFile: keystore.jks
+          keystorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keystoreAliasPassword: ${{ secrets.KEYSTORE_ALIAS_PASSWORD }}
+          keystoreAlias: ${{ secrets.KEYSTORE_ALIAS }}
+
+      - name: Build unsigned APK (fallback)
+        if: ${{ env.KEYSTORE_BASE64 == '' }}
+        run: ./gradlew assembleRelease
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk
+          path: main/build/outputs/apk/*/release/*.apk
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: main/build/outputs/apk/*/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

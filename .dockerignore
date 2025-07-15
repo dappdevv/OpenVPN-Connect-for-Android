@@ -1,0 +1,62 @@
+# Git
+.git
+.gitignore
+.gitmodules
+
+# GitHub
+.github
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+main/build/
+remoteExample/build/
+build/
+.gradle/
+local.properties
+
+# Logs
+*.log
+
+# Documentation
+*.md
+doc/
+
+# Misc
+misc/
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Scripts (кроме необходимых)
+scripts/local-build.sh
+
+# Временные файлы
+*.tmp
+*.temp
+*.bak
+
+# Android
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+proguard/
+lint.xml
+
+# Keystore files
+*.keystore
+*.jks 

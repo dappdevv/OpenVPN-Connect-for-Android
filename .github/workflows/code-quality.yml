@@ -1,0 +1,108 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: "8"
+          distribution: "temurin"
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Install SWIG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y swig
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2
+        with:
+          api-level: 27
+          build-tools: 27.0.3
+          ndk-version: "21.4.7075529"
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Android Lint
+        run: ./gradlew lintDebug
+        continue-on-error: true
+
+      - name: Run Checkstyle
+        run: ./gradlew checkstyle
+        continue-on-error: true
+
+      - name: Upload Lint Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: lint-results
+          path: |
+            main/build/reports/lint-results-*.html
+            main/build/reports/lint-results-*.xml
+
+      - name: Upload Checkstyle Results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: checkstyle-results
+          path: main/build/reports/checkstyle/
+
+      - name: Comment PR with Lint Results
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request' && always()
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Поиск файлов с результатами lint
+            const lintDir = 'main/build/reports/';
+            if (fs.existsSync(lintDir)) {
+              const files = fs.readdirSync(lintDir);
+              const lintFiles = files.filter(f => f.startsWith('lint-results-') && f.endsWith('.xml'));
+              
+              if (lintFiles.length > 0) {
+                const lintFile = path.join(lintDir, lintFiles[0]);
+                if (fs.existsSync(lintFile)) {
+                  const lintContent = fs.readFileSync(lintFile, 'utf8');
+                  const issueCount = (lintContent.match(/<issue/g) || []).length;
+                  
+                  const comment = `## 🔍 Lint Results
+                  
+                  Found ${issueCount} lint issues.
+                  
+                  Please check the lint report artifact for details.`;
+                  
+                  github.rest.issues.createComment({
+                    issue_number: context.issue.number,
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    body: comment
+                  });
+                }
+              }
+            }

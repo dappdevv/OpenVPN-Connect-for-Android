@@ -2,6 +2,66 @@
 OpenVPN for Android
 ===================
 [![Build Status](https://travis-ci.org/schwabe/ics-openvpn.svg?branch=master)](https://travis-ci.org/schwabe/ics-openvpn)
+[![GitHub Actions](https://github.com/dappdevv/OpenVPN-Connect-for-Android/workflows/Build%20Android%20App/badge.svg)](https://github.com/dappdevv/OpenVPN-Connect-for-Android/actions)
+
+## Автоматическая сборка с GitHub Actions
+
+Проект настроен для автоматической сборки с помощью GitHub Actions. Доступны три workflow:
+
+- **Build Android App** - Автоматическая сборка при каждом push
+- **Release Build** - Сборка подписанных APK для релизов
+- **Code Quality** - Проверка качества кода и линтинг
+
+📋 [Подробная инструкция по настройке](.github/GITHUB_ACTIONS_SETUP.md)  
+🔐 [Быстрая настройка секретов для подписи APK](QUICK_SETUP_SECRETS.md)  
+📖 [Полное руководство по keystore и секретам](KEYSTORE_SETUP_GUIDE.md)
+
+### Локальная сборка
+
+Для локальной сборки используйте подготовленный скрипт:
+
+```bash
+# Debug сборка
+./scripts/local-build.sh debug
+
+# Release сборка
+./scripts/local-build.sh release
+
+# Очистка проекта
+./scripts/local-build.sh clean
+
+# Запуск тестов
+./scripts/local-build.sh test
+
+# Линтинг кода
+./scripts/local-build.sh lint
+```
+
+**Требования:**
+
+- JDK 8
+- Android SDK (установите `ANDROID_HOME`)
+- SWIG 3.0+
+- CMake
+- Git (для субмодулей)
+
+### Сборка в Docker
+
+Для сборки без установки зависимостей используйте Docker:
+
+```bash
+# Сборка Docker образа
+docker build -t openvpn-android .
+
+# Debug сборка
+docker run --rm -v $(pwd):/workspace openvpn-android debug
+
+# Release сборка
+docker run --rm -v $(pwd):/workspace openvpn-android release
+
+# Или используйте docker-compose
+docker-compose up
+```
 
 ## Description
 
