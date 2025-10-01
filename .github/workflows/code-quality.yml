@@ -81,7 +81,7 @@ jobs:
           path: main/build/reports/checkstyle/
 
       - name: Comment PR with Lint Results
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         if: github.event_name == 'pull_request' && always()
         with:
           script: |
